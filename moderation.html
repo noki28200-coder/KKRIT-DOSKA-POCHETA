@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Модерация заявок</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+
+<div class="container py-4">
+    <h2 class="mb-4">Модерация заявок</h2>
+    
+    <a href="index.html" class="btn btn-secondary mb-4">← Вернуться на главную</a>
+
+    <div id="pendingContainer"></div>
+    
+    <div id="emptyMessage" class="alert alert-info" style="display: none;">
+        Нет заявок на модерацию
+    </div>
+</div>
+
+<script>
+    // ====== ЗАГРУЗКА ЗАЯВОК НА МОДЕРАЦИЮ ======
+    function loadPendingPeople() {
+        const saved = localStorage.getItem('pendingPeople');
+        if (saved) {
+            return JSON.parse(saved);
+        }
+        return [];
+    }
+
+    // ====== ЗАГРУЗКА УТВЕРЖДЕННЫХ ЛЮДЕЙ ======
+    function loadApprovedPeople() {
+        const saved = localStorage.getItem('approvedPeople');
+        if (saved) {
+            return JSON.parse(saved);
+        }
+        return [];
+    }
+
+    // ====== СОХРАНЕНИЕ УТВЕРЖДЕННЫХ ЛЮДЕЙ ======
+    function saveApprovedPeople(people) {
+        localStorage.setItem('approvedPeople', JSON.stringify(people));
+    }
+
+    // ====== СОХРАНЕНИЕ ЗАЯВОК ======
+    function savePendingPeople(people) {
+        localStorage.setItem('pendingPeople', JSON.stringify(people));
+    }
+
+    // ====== ПРИНЯТИЕ ЗАЯВКИ ======
+    function approvePerson(id) {
+        let pending = loadPendingPeople();
+        let approved = loadApprovedPeople();
+        
+        // Находим заявку
+        const personIndex = pending.findIndex(p => p.id === id);
+        if (personIndex === -1) return;
+        
+        const person = pending[personIndex];
+        
+        // Удаляем из заявок
+        pending.splice(personIndex, 1);
+        
+        // Добавляем в утвержденные
+        approved.push(person);
+        
+        // Сохраняем
+        savePendingPeople(pending);
+        saveApprovedPeople(approved);
+        
+        // Обновляем страницу
+        renderPending();
+        
+        alert(`Заявка "${person.name}" одобрена!`);
+    }
+
+    // ====== ОТКЛОНЕНИЕ ЗАЯВКИ ======
+    function rejectPerson(id) {
+        let pending = loadPendingPeople();
+        
+        // Находим и удаляем заявку
+        const personIndex = pending.findIndex(p => p.id === id);
+        if (personIndex === -1) return;
+        
+        const person = pending[personIndex];
+        pending.splice(personIndex, 1);
+        
+        // Сохраняем
+        savePendingPeople(pending);
+        
+        // Обновляем страницу
+        renderPending();
+        
+        alert(`Заявка "${person.name}" отклонена!`);
+    }
+
+    // ====== РЕНДЕР ЗАЯВОК ======
+    function renderPending() {
+        const container = document.getElementById("pendingContainer");
+        const emptyMessage = document.getElementById("emptyMessage");
+        const pending = loadPendingPeople();
+        
+        container.innerHTML = "";
+        
+        if (pending.length === 0) {
+            emptyMessage.style.display = "block";
+            return;
+        }
+        
+        emptyMessage.style.display = "none";
+        
+        pending.forEach(p => {
+            container.innerHTML += `
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="d-flex">
+                            <img src="${p.img}" alt="" style="width: 120px; border-radius: 5px;">
+                            <div class="ms-3 flex-grow-1">
+                                <h5>${p.name} группа ${p.group}</h5>
+                                <p><strong>${p.title}</strong></p>
+                                <p class="mb-2">${p.desc}</p>
+                                <p class="mb-2">${p.text}</p>
+                                <p class="text-muted small">Подано: ${p.submittedAt}</p>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <button class="btn btn-success me-2" onclick="approvePerson(${p.id})">
+                                ✓ Принять
+                            </button>
+                            <button class="btn btn-danger" onclick="rejectPerson(${p.id})">
+                                ✗ Отклонить
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    // Инициализация
+    renderPending();
+</script>
+
+</body>
+</html>

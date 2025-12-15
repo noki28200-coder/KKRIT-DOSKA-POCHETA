@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Доска почёта</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        .person-card img {
+            width: 120px;
+            border-radius: 3px;
+        }
+        .person-card:hover {
+            background: #f7f7f7;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body class="bg-light">
+
+<!-- ТВОЯ ШАПКА -->
+<div class="top-line bg-dark text-white py-1 px-3 d-flex justify-content-between small">
+    <span>218-17-98 (доб. 207, 216, 208)</span>
+    <span>пр. Красноярский рабочий, 156 | пр. Свободный, 67</span>
+</div>
+
+<nav class="navbar navbar-expand-lg bg-white shadow-sm">
+    <div class="container-fluid px-4">
+
+        <a class="navbar-brand" href="https://kraskrit.ru/" target="_blank">
+            <img src="logo.png" alt="Логотип" height="55">
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse justify-content-end" id="menu">
+            <ul class="navbar-nav">
+                <li class="nav-item"><a class="nav-link" href="#">Доска почёта</a></li>
+                <li class="nav-item"><a class="nav-link" href="https://kraskrit.ru/" target="_blank">Сведения об организации</a></li>
+                <li class="nav-item"><a class="nav-link" href="https://kraskrit.ru/" target="_blank">Абитуриентам</a></li>
+                <li class="nav-item"><a class="nav-link" href="https://kraskrit.ru/" target="_blank">Студентам</a></li>
+                <li class="nav-item"><a class="nav-link" href="https://kraskrit.ru/" target="_blank">Контакты</a></li>
+                <li class="nav-item"><a class="nav-link" href="https://kraskrit.ru/" target="_blank">Новости</a></li>
+                <li class="nav-item"><a class="nav-link" href="https://kraskrit.ru/" target="_blank">Расписание</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+
+<div class="container py-4">
+
+    <h3 class="mb-4">Доска почёта</h3>
+
+    <!-- КНОПКА ДОБАВЛЕНИЯ -->
+    <button class="btn btn-success mb-4" onclick="addPerson()">+ Предложить кандидата</button>
+
+    <!-- КОНТЕЙНЕР ДЛЯ КАРТОЧЕК -->
+    <div id="peopleContainer"></div>
+
+</div>
+<footer class="pt-5 pb-3">
+    <div class="container">
+
+        <div class="row">
+
+            <div class="col-md-3 mb-4">
+                <img src="logo.png" alt="Логотип" height="80">
+                <p class="mt-3">
+                    Наш образовательная организация имеет опыт в подготовке высококвалифицированных специалистов...
+                </p>
+            </div>
+
+            <div class="col-md-3 mb-4">
+                <div class="footer-title">Контакты</div>
+                <p>660021, г. Красноярск<br>ул. Красноярский рабочий, 156</p>
+                <button onclick="moderation()">ул. Свободный, 67</button>
+                <p>218-17-98 (доб 207, 216, 208)</p>
+            </div>
+
+            <div class="col-md-3 mb-4">
+                <div class="footer-title">Карта сайта</div>
+                <p>• Сведения об организации</p>
+                <p>• Новости</p>
+                <p>• Обратная связь</p>
+                <p>• Студентам</p>
+            </div>
+
+            <div class="col-md-3 mb-4">
+                <div class="footer-title">График работы</div>
+                <p>Пн-Пт: 8:30 до 18:00</p>
+                <p>Сб: 9:00 до 13:00</p>
+                <p><i>Вс: выходной</i></p>
+            </div>
+
+        </div>
+
+        <hr class="border-secondary">
+
+        <p class="text-center small">© ККПЭП 2023-2025. Все права защищены.</p>
+    </div>
+</footer>
+
+<script>
+    // ====== ЗАГРУЗКА УТВЕРЖДЕННЫХ ДАННЫХ ======
+    function loadPeople() {
+        const saved = localStorage.getItem('approvedPeople');
+        if (saved) {
+            return JSON.parse(saved);
+        }
+        // Начальные данные, если ничего не сохранено
+        return [
+            {
+                id: 1,
+                name: "Томас Шелби",
+                group: "1.24–9АБД",
+                desc: "Недавно участвовал в мероприятии и тут…. (читать дальше)",
+                title: "Постоянный участник мероприятий, отличник",
+                text: "Недавно участвовал там то там то, проявил себя там то там то. Гордость колледжа.",
+                img: "person.jpg"
+            }
+        ];
+    }
+
+    // ====== ЗАГРУЗКА ЗАЯВОК НА МОДЕРАЦИЮ ======
+    function loadPendingPeople() {
+        const saved = localStorage.getItem('pendingPeople');
+        if (saved) {
+            return JSON.parse(saved);
+        }
+        return [];
+    }
+
+    // ====== СОХРАНЕНИЕ ЗАЯВКИ НА МОДЕРАЦИЮ ======
+    function savePendingPerson(person) {
+        const pending = loadPendingPeople();
+        pending.push(person);
+        localStorage.setItem('pendingPeople', JSON.stringify(pending));
+    }
+
+    // ====== ДАННЫЕ О ЛЮДЯХ =======
+    let people = loadPeople();
+
+    // ====== РЕНДЕР КАРТОЧЕК ======
+    function renderPeople() {
+        const container = document.getElementById("peopleContainer");
+        container.innerHTML = "";
+
+        people.forEach(p => {
+            container.innerHTML += `
+                <div class="bg-white shadow-sm rounded p-3 mb-3 d-flex person-card"
+                     onclick="openPerson(${p.id})">
+                    <img src="${p.img}" alt="">
+                    <div class="ms-3">
+                        <h5 class="fw-bold">${p.name} группа ${p.group}</h5>
+                        <p class="mb-0">${p.desc}</p>
+                    </div>
+                </div>
+            `;
+        });
+    }
+    // ====== ПЕРЕХОД НА СТРАНИЦУ ЧЕЛОВЕКА ======
+    function openPerson(id) {
+        window.location.href = "person.html?id=" + id;
+    }
+    function moderation() {
+        window.location.href = "moderation.html";
+    }
+    // ====== ДОБАВЛЕНИЕ НОВОГО ЧЕЛОВЕКА (ОТПРАВКА НА МОДЕРАЦИЮ) ======
+    function addPerson() {
+        const name = prompt("Введите имя:");
+        if (!name) return;
+        
+        const group = prompt("Введите группу:");
+        if (!group) return;
+        
+        const desc = prompt("Введите краткое описание:");
+        if (!desc) return;
+        
+        const title = prompt("Введите заголовок достижений:");
+        if (!title) return;
+        
+        const text = prompt("Введите полное описание:");
+        if (!text) return;
+        
+        const img = prompt("Введите ссылку на фото (или person.jpg):", "person.jpg");
+
+        const newPerson = {
+            id: Date.now(),
+            name,
+            group,
+            desc,
+            title,
+            text,
+            img: img || "person.jpg",
+            submittedAt: new Date().toLocaleString('ru-RU')
+        };
+
+        savePendingPerson(newPerson); // Отправляем на модерацию
+        alert("Ваша заявка отправлена на модерацию! После проверки кандидат появится на доске почёта.");
+    }
+
+    renderPeople();
+</script>
+
+
+</body>
+</html>
